@@ -26,7 +26,7 @@ from tensorflow.python.ops import array_ops
 random.seed(0)
 np.random.seed(0)
 
-from utils import train_utils, googlenet_load, tf_concat
+from utils import train_utils, googlenet_load
 
 def build_overfeat_inner(H, lstm_input):
     '''
@@ -77,7 +77,7 @@ def rezoom(H, pred_boxes, early_feat, early_feat_channels, w_offsets, h_offsets)
                                                        early_feat_channels,
                                                        w_offset, h_offset))
 
-    interp_indices = tf_concat(0, indices)
+    interp_indices = tf.concat(axis=0, values=indices)
     rezoom_features = train_utils.interp(early_feat,
                                          interp_indices,
                                          early_feat_channels)
@@ -117,9 +117,9 @@ def build_forward(H, x, phase, reuse):
             cnn_s_pool = tf.nn.avg_pool(cnn_s[:, :, :, :256], ksize=[1, pool_size, pool_size, 1],
                                         strides=[1, 1, 1, 1], padding='SAME')
 
-            cnn_s_with_pool = tf_concat(3, [cnn_s_pool, cnn_s[:, :, :, 256:]])
+            cnn_s_with_pool = tf.concat(axis=3, values=[cnn_s_pool, cnn_s[:, :, :, 256:]])
             cnn_deconv = deconv(cnn_s_with_pool, output_shape=[H['batch_size'], H['grid_height'], H['grid_width'], 256], channels=[H['later_feat_channels'], 256])
-            cnn = tf_concat(3, (cnn_deconv, cnn[:, :, :, 256:]))
+            cnn = tf.concat(axis=3, values=(cnn_deconv, cnn[:, :, :, 256:]))
 
     elif H['avg_pool_size'] > 1:
         pool_size = H['avg_pool_size']
@@ -127,7 +127,7 @@ def build_forward(H, x, phase, reuse):
         cnn2 = cnn[:, :, :, 700:]
         cnn2 = tf.nn.avg_pool(cnn2, ksize=[1, pool_size, pool_size, 1],
                               strides=[1, 1, 1, 1], padding='SAME')
-        cnn = tf_concat(3, [cnn1, cnn2])
+        cnn = tf.concat(axis=3, values=[cnn1, cnn2])
 
     cnn = tf.reshape(cnn,
                      [H['batch_size'] * H['grid_width'] * H['grid_height'], H['later_feat_channels']])
@@ -158,8 +158,8 @@ def build_forward(H, x, phase, reuse):
             pred_logits.append(tf.reshape(tf.matmul(output, conf_weights),
                                          [outer_size, 1, H['num_classes']]))
 
-        pred_boxes = tf_concat(1, pred_boxes)
-        pred_logits = tf_concat(1, pred_logits)
+        pred_boxes = tf.concat(axis=1, values=pred_boxes)
+        pred_logits = tf.concat(axis=1, values=pred_logits)
         pred_logits_squash = tf.reshape(pred_logits,
                                         [outer_size * H['rnn_len'], H['num_classes']])
         pred_confidences_squash = tf.nn.softmax(pred_logits_squash)
@@ -176,7 +176,7 @@ def build_forward(H, x, phase, reuse):
             if phase == 'train':
                 rezoom_features = tf.nn.dropout(rezoom_features, 0.5)
             for k in range(H['rnn_len']):
-                delta_features = tf_concat(1, [lstm_outputs[k], rezoom_features[:, k, :] / 1000.])
+                delta_features = tf.concat(axis=1, values=[lstm_outputs[k], rezoom_features[:, k, :] / 1000.])
                 dim = 128
                 delta_weights1 = tf.get_variable(
                                     'delta_ip1%d' % k,
@@ -197,9 +197,9 @@ def build_forward(H, x, phase, reuse):
                 scale = H.get('rezoom_conf_scale', 50)
                 pred_confs_deltas.append(tf.reshape(tf.matmul(ip1, delta_confs_weights) * scale,
                                                     [outer_size, 1, H['num_classes']]))
-            pred_confs_deltas = tf_concat(1, pred_confs_deltas)
+            pred_confs_deltas = tf.concat(axis=1, values=pred_confs_deltas)
             if H['reregress']:
-                pred_boxes_deltas = tf_concat(1, pred_boxes_deltas)
+                pred_boxes_deltas = tf.concat(axis=1, values=pred_boxes_deltas)
             return pred_boxes, pred_logits, pred_confidences, pred_confs_deltas, pred_boxes_deltas
 
     return pred_boxes, pred_logits, pred_confidences
