@@ -26,7 +26,7 @@ from tensorflow.python.ops import array_ops
 random.seed(0)
 np.random.seed(0)
 
-from utils import train_utils, googlenet_load
+from .utils import train_utils, googlenet_load
 
 def build_overfeat_inner(H, lstm_input):
     '''
