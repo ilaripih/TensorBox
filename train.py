@@ -425,7 +425,7 @@ def train(H, test_images):
     (config, loss, accuracy, summary_op, train_op,
      smooth_op, global_step, learning_rate) = build(H, q)
 
-    saver = tf.train.Saver(max_to_keep=None)
+    saver = tf.train.Saver(max_to_keep=1)
     writer = tf.summary.FileWriter(
         logdir=H['save_dir'],
         flush_secs=10
