@@ -10,6 +10,4 @@ hungarian: hungarian/hungarian.so
 hungarian/hungarian.so:
 	cd hungarian && \
 	TF_INC=$$(python3 -c 'import tensorflow as tf; print(tf.sysconfig.get_include())') && \
-	if [ `uname` == Darwin ];\
-	then g++ -std=c++11 -shared hungarian.cc -o hungarian.so -fPIC -I $$TF_INC -undefined dynamic_lookup -O2;\
-	else g++ -std=c++11 -shared hungarian.cc -o hungarian.so -fPIC -I  $$TF_INC -O2; fi
+	g++ -std=c++11 -shared hungarian.cc -o hungarian.so -fPIC -I $$TF_INC -I $$TF_INC/external/nsync/public/ -O2;
